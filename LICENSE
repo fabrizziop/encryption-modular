@@ -1,27 +1,4 @@
-
-Skip to content
-This repository
-
-    Explore
-    Gist
-    Blog
-    Help
-
-    @fabrizziop fabrizziop
-
-1
-2
-
-    0
-
-fabrizziop/crypto-plus-steg
-
-crypto-plus-steg/LICENSE
-@fabrizziop fabrizziop on 20 Feb Initial commit
-
-1 contributor
-341 lines (281 sloc) 18.027 kb
-GNU GENERAL PUBLIC LICENSE
+                    GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
  Copyright (C) 1989, 1991 Free Software Foundation, Inc., <http://fsf.org/>
@@ -360,8 +337,3 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
-
-    Status API Training Shop Blog About 
-
-    © 2015 GitHub, Inc. Terms Privacy Security Contact 
-
