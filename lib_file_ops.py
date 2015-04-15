@@ -15,5 +15,6 @@ def write_file_from_bytearray(file_name,input_bytearray):
 	if input_bytearray != None:
 		test_file = open(file_name,'wb')
 		test_file.write(input_bytearray)
+		test_file.close()
 	return True
 
