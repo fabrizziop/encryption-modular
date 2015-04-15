@@ -22,17 +22,9 @@ def decrypt_file_with_full_prompt():
 		return False
 	file_to_save, hmac_state, decryption_done = decrypt_file(read_file, main_keystore)
 	if decryption_done == True:
-		if hmac_state == True:
-			write_file_from_bytearray(file_name,file_to_save)
-		else:
-			print("HMAC Mismatch, want to continue?. 0: No, 1: Yes [0]")
-			hmac_ignore = input_int_until_list_or_default([0,1],0)
-			if hmac_ignore == 1:
-				write_file_from_bytearray(file_name,file_to_save)
-			else:
-				pass
+		write_file_from_bytearray(file_name,file_to_save)
 	else:
-		print("Decryption Failed.")
+		print("Decryption Failed or Aborted.")
 
 def encrypt_file_into_wav():
 	read_file, file_name = user_file_prompt("File to encrypt: ")
@@ -50,17 +42,9 @@ def decrypt_file_from_wav():
 	input_bytearray = get_bytearray_from_wav(wav_bytes)
 	file_to_save, hmac_state, decryption_done = decrypt_file(input_bytearray, main_keystore)
 	if decryption_done == True:
-		if hmac_state == True:
-			write_file_from_bytearray(file_out_name,file_to_save)
-		else:
-			print("HMAC Mismatch, want to continue?. 0: No, 1: Yes [0]")
-			hmac_ignore = input_int_until_list_or_default([0,1],0)
-			if hmac_ignore == 1:
-				write_file_from_bytearray(file_out_name,file_to_save)
-			else:
-				pass
+		write_file_from_bytearray(file_out_name,file_to_save)
 	else:
-		print("Decryption Failed.")
+		print("Decryption Failed or Aborted.")
 
 def main_loop(current_keystore):
 	loop_done = False

@@ -51,13 +51,21 @@ def decrypt_bytearray_main(file_array,main_key):
 	# print('main key: ',list(main_key))
 	file_array = file_array[:3200+ltd]
 	hmac_state = verify_hmac(file_array,main_key)
+	encryption_done = False
 	if hmac_state == True:
 		print("HMAC OK.")
 		out_array.extend(encrypt_bytearray_with_aes256_ede3_ctr(file_array[3136:(3136+ltd)],current_cipher))
+		encryption_done = True
 	else:
-		print("HMAC Fucked up.")
-		out_array.extend(encrypt_bytearray_with_aes256_ede3_ctr(file_array[3136:(3136+ltd)],current_cipher))
-	return out_array, hmac_state
+		#print("HMAC Fucked up.")
+		print("HMAC Mismatch, want to continue?. 0: No, 1: Yes [0]")
+		hmac_ignore = input_int_until_list_or_default([0,1],0)
+		if hmac_ignore == 1:
+			out_array.extend(encrypt_bytearray_with_aes256_ede3_ctr(file_array[3136:(3136+ltd)],current_cipher))
+			encryption_done = True
+		else:
+			pass
+	return out_array, hmac_state, encryption_done
 	
 def encrypt_file_from_bytearray(bytearray_to_encrypt):
 	file_name = input("File name to save into:")
@@ -94,13 +102,13 @@ def decrypt_file(file_to_decrypt, current_keystore, allow_rsa=True):
 	header = file_to_decrypt[:3072]
 	if is_psk == True:
 		key = decrypt_psk_header(header,password)
-		file_to_save, hmac_state = decrypt_bytearray_main(file_to_decrypt,key)
-		return file_to_save, hmac_state, True
+		file_to_save, hmac_state, decryption_done = decrypt_bytearray_main(file_to_decrypt,key)
+		return file_to_save, hmac_state, decryption_done
 	else:
 		key, key_state = current_keystore.decrypt_rsa_header(header)
 		if key_state == False:
 			return False, False, False
 		else:
-			file_to_save, hmac_state = decrypt_bytearray_main(file_to_decrypt,key)
-			return file_to_save, hmac_state, True
+			file_to_save, hmac_state, decryption_done = decrypt_bytearray_main(file_to_decrypt,key)
+			return file_to_save, hmac_state, decryption_done
 	
