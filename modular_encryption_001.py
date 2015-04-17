@@ -3,6 +3,8 @@ from lib_main_crypto import *
 from lib_rsa import *
 from lib_file_ops import *
 from lib_wave import *
+from lib_random import *
+
 main_keystore = rsa_keystore()
 def encrypt_file_with_full_prompt():
 	read_file, file_name = user_file_prompt("File to encrypt: ")
@@ -11,6 +13,7 @@ def encrypt_file_with_full_prompt():
 		return False
 	file_to_save, encryption_done = encrypt_file(read_file, main_keystore)
 	if encryption_done == True:
+		file_to_save.extend(create_random_key(rng.randint(128,16384)))
 		write_file_from_bytearray(file_name,file_to_save)
 	else:
 		print("Encryption Failed.")
@@ -28,15 +31,34 @@ def decrypt_file_with_full_prompt():
 
 def encrypt_file_into_wav():
 	read_file, file_name = user_file_prompt("File to encrypt: ")
+	if (file_name == False) and (read_file == False):
+		print("File Not Found")
+		return False
+	min_len = len(read_file)
 	wav_in_file = input("WAV file to read: ")
+	if is_file_accessible(wav_in_file) == False:
+		print("File Not Found")
+		return False
+	max_len = calculate_max_wave_encryption(wav_in_file)
+	print('Length of file to encrypt:',min_len+3200)
+	print('Length available in WAV:', max_len)
+	if (min_len+3200) > max_len:
+		print("File won't fit into WAV.")
+		return False
 	wav_out_name = input("File name to save into:")
 	file_to_save, encryption_done = encrypt_file(read_file, main_keystore)
-	wav_in, parameters_wav = read_wave_to_bytearray(wav_in_file)
-	out_bytearray = merge_bytearray_and_wav(file_to_save,wav_in)
-	write_wave_from_bytearray(wav_out_name,out_bytearray,parameters_wav)
+	if encryption_done == True:
+		wav_in, parameters_wav = read_wave_to_bytearray(wav_in_file)
+		out_bytearray = merge_bytearray_and_wav(file_to_save,wav_in)
+		write_wave_from_bytearray(wav_out_name,out_bytearray,parameters_wav)
+	else:
+		print("Encryption Failed.")
 
 def decrypt_file_from_wav():
 	wav_in_file = input("WAV file to read: ")
+	if is_file_accessible(wav_in_file) == False:
+		print("File Not Found")
+		return False
 	file_out_name = input("File name to save into:")
 	wav_bytes, parameters_wav = read_wave_to_bytearray(wav_in_file)
 	input_bytearray = get_bytearray_from_wav(wav_bytes)

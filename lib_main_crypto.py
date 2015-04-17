@@ -7,6 +7,7 @@ from lib_bitwise import int_to_big_endian, big_endian_to_int
 from lib_keyslot import *
 from lib_user_input import *
 from lib_file_ops import *
+from lib_random import *
 
 print_same_line = sys.stdout.write
 
@@ -85,6 +86,7 @@ def encrypt_file_from_bytearray(bytearray_to_encrypt):
 		return False
 	else:
 		file_to_save, encryption_done = encrypt_file(bytearray_to_encrypt, False, allow_rsa=False)
+		file_to_save.extend(create_random_key(rng.randint(128,16384)))
 		write_file_from_bytearray(file_name,file_to_save)
 def decrypt_file_to_bytearray():
 	read_file, file_name = user_file_prompt("File to decrypt: ")

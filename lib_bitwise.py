@@ -1,6 +1,8 @@
 from math import ceil
 m_big = 0b11111111
 
+# Both of these are self-explaining.
+
 def int_to_big_endian(intg, pad_to=16):
 	big_endian_int = bytearray()
 	times_to_iterate = ceil(len(bin(intg)[2:])/8)
@@ -26,6 +28,12 @@ def big_endian_to_int(big_endian_barr):
 		# des_int >>= 3
 	# i_list.reverse()
 	# return i_list
+	
+# Functions used to split a byte into four 2-bit chunks.
+# That allows the program to place bits inside audio, 
+# without affecting the perceived quality. You probably
+# won't distinguish 14-bit from 16-bit audio.
+
 def byte_to_2_bit_chunks(current_byte):
 	chunk_list = []
 	for i in range(0,4):

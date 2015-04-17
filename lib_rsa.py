@@ -25,10 +25,10 @@ class rsa_keystore(object):
 			print("No keys found")
 		else:
 			for i in range(0,len(self.key_fingerprint_list)):
-				print("Key number:",i+1)
-				print("Fingerprint",self.key_fingerprint_list[i])
+				print("Key number :",i+1)
+				print("Fingerprint:",self.key_fingerprint_list[i])
 				# print("Size",self.key_list[i].size())
-				print("Private key in possesion:", self.key_list[i].has_private())
+				print("Private key:", self.key_list[i].has_private())
 	def export_key(self):
 		kte = force_integer_input("Key to export:")-1
 		try:

@@ -3,6 +3,16 @@ import sys
 from lib_random import *
 from lib_bitwise import *
 print_same_line = sys.stdout.write
+def read_wave_parameters(file_name):
+	test_file = wave.open(file_name,'rb')
+	parameters = test_file.getparams()
+	test_file.close()
+	return parameters
+
+def calculate_max_wave_encryption(file_name):
+	parameters = read_wave_parameters(file_name)
+	return parameters[0]*parameters[1]*parameters[3] // 8
+
 def read_wave_to_bytearray(file_name):
 	test_file = wave.open(file_name,'rb')
 	parameters = test_file.getparams()
