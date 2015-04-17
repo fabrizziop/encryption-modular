@@ -42,7 +42,7 @@ def user_file_prompt(prompt_string):
 	if file_condition == True:
 		return read_file_to_bytearray(file_name), file_name
 	else:
-		return False, file_name
+		return False, False
 		
 def user_file_prompt_noread(prompt_string):
 	file_name = input(prompt_string)
@@ -50,7 +50,7 @@ def user_file_prompt_noread(prompt_string):
 	if file_condition == True:
 		return True, file_name
 	else:
-		return False, file_name
+		return False, False
 
 def user_encryption_type_prompt(allow_rsa):
 	encryption_type = 1

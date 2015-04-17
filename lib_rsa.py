@@ -33,37 +33,72 @@ class rsa_keystore(object):
 		kte = force_integer_input("Key to export:")-1
 		try:
 			kte_ac = self.key_list[kte]
-			kte_n = kte_ac.n
-			kte_str = str(kte_n)
 			kte_hasprivate = kte_ac.has_private()
+			priv_override = False
 			if kte_hasprivate == True:
-				export_priv = False
-				epprompt = str(input("Export also your private key? [N]"))
+				epprompt = str(input("Are you sure? The private key WILL be included. [N]"))
 				if epprompt == "Y" or epprompt == "y":
-					export_priv = True
-				if export_priv == True:
-					kte_d = kte_ac.d
-					kte_str = kte_str + "," + str(kte_d)
-			encrypt_file_from_bytearray(bytearray(kte_str.encode()))
+					priv_override = True
+			if (kte_hasprivate == False) or (kte_hasprivate == True and priv_override == True):
+				encrypt_file_from_bytearray(bytearray(kte_ac.exportKey(format='DER')))
 		except IndexError:
 			print("Key not in keystore.")
+	# def export_key(self):
+		# kte = force_integer_input("Key to export:")-1
+		# try:
+			# kte_ac = self.key_list[kte]
+			# kte_n = kte_ac.n
+			# kte_str = str(kte_n)
+			# kte_hasprivate = kte_ac.has_private()
+			# if kte_hasprivate == True:
+				# export_priv = False
+				# epprompt = str(input("Export also your private key? [N]"))
+				# if epprompt == "Y" or epprompt == "y":
+					# export_priv = True
+				# if export_priv == True:
+					# kte_d = kte_ac.d
+					# kte_str = kte_str + "," + str(kte_d)
+			# encrypt_file_from_bytearray(bytearray(kte_str.encode()))
+		# except IndexError:
+			# print("Key not in keystore.")
 	def import_key(self):
 		keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray()
 		if hmac_state == False or decryption_done == False:
 			print("Decryption Failed")
-			return "F"
+			return False
 		else:
-			keydec = (keyraw.decode()).split(",")
-		if len(keydec) == 1:
-			tuple_to_use = int(keydec[0]),65537
-		elif len(keydec) == 2:
-			tuple_to_use = int(keydec[0]),65537,int(keydec[1])
-		self.key_list.append(RSA.construct(tuple_to_use))
-		self.update_fingerprints()
+			try:
+				self.key_list.append(RSA.importKey(keyraw))
+				self.update_fingerprints()
+				return True
+			except ValueError:
+				print("Malformed RSA key.")
+				return False
+	# def import_key(self):
+		# keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray()
+		# if hmac_state == False or decryption_done == False:
+			# print("Decryption Failed")
+			# return "F"
+		# else:
+			# keydec = (keyraw.decode()).split(",")
+		# if len(keydec) == 1:
+			# tuple_to_use = int(keydec[0]),65537
+		# elif len(keydec) == 2:
+			# tuple_to_use = int(keydec[0]),65537,int(keydec[1])
+		# self.key_list.append(RSA.construct(tuple_to_use))
+		# self.update_fingerprints()
 	def delete_key(self):
 		kte = force_integer_input("Key to delete:")-1
 		self.key_list.pop(kte)
 		self.update_fingerprints()
+	def create_public_from_private(self):
+		kte = force_integer_input("Key to create a public clone from:")-1
+		try:
+			kte_ac = self.key_list[kte]
+			self.key_list.append(kte_ac.publickey())
+			self.update_fingerprints()
+		except IndexError:
+			print("Key not in keystore.")
 	def create_rsa_header(self):
 		ktu = force_integer_input("Key to use:")-1
 		try:

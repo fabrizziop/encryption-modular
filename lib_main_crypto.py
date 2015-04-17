@@ -1,11 +1,14 @@
 from math import ceil
 import hmac
+import sys
 from lib_stream_ciphers import aes256_ede3_ctr
 from lib_elementary_operations import do_xor_on_bytes
 from lib_bitwise import int_to_big_endian, big_endian_to_int
 from lib_keyslot import *
 from lib_user_input import *
 from lib_file_ops import *
+
+print_same_line = sys.stdout.write
 
 def derive_hmac_key_from_main(tkey_bytes):
 	return hashlib.sha512(bytearray(hashlib.sha512(tkey_bytes).digest())+bytearray(hashlib.sha256(tkey_bytes).digest())+bytearray(hashlib.md5(tkey_bytes).digest())+bytearray(hashlib.sha384(tkey_bytes).digest())+bytearray(hashlib.sha1(tkey_bytes).digest())).digest()
@@ -27,7 +30,15 @@ def decrypt_length(ltd, cipher_object):
 def encrypt_bytearray_with_aes256_ede3_ctr(bytearray_to_encrypt, cipher_object):
 	tte = ceil(len(bytearray_to_encrypt)/ 64)
 	out_array = bytearray()
+	pc = tte // 80
+	cnt = 0
+	print("Keystream Progress:")
 	for i in range(0,tte):
+		cnt += 1
+		if (cnt // pc) == 1:
+			print_same_line("=")
+			sys.stdout.flush()
+			cnt = 0
 		out_array.extend(do_xor_on_bytes(bytearray_to_encrypt[(i*64):(i*64)+64],cipher_object.get_bytes_to_xor()))
 	return out_array
 
@@ -77,9 +88,9 @@ def encrypt_file_from_bytearray(bytearray_to_encrypt):
 		write_file_from_bytearray(file_name,file_to_save)
 def decrypt_file_to_bytearray():
 	read_file, file_name = user_file_prompt("File to decrypt: ")
-	if file_name == False:
+	if (file_name == False) and (read_file == False):
 		print("File Not Found")
-		return False
+		return False, False, False
 	return decrypt_file(read_file, False, allow_rsa=False)
 
 def encrypt_file(file_to_encrypt, current_keystore, allow_rsa=True):
@@ -97,7 +108,6 @@ def encrypt_file(file_to_encrypt, current_keystore, allow_rsa=True):
 			return file_to_save, True
 		
 def decrypt_file(file_to_decrypt, current_keystore, allow_rsa=True):
-	print(file_to_decrypt[0])
 	is_psk, password = user_decryption_prompt(file_to_decrypt[0])
 	header = file_to_decrypt[:3072]
 	if is_psk == True:

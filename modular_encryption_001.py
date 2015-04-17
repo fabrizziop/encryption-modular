@@ -6,7 +6,7 @@ from lib_wave import *
 main_keystore = rsa_keystore()
 def encrypt_file_with_full_prompt():
 	read_file, file_name = user_file_prompt("File to encrypt: ")
-	if file_name == False:
+	if (file_name == False) and (read_file == False):
 		print("File Not Found")
 		return False
 	file_to_save, encryption_done = encrypt_file(read_file, main_keystore)
@@ -49,7 +49,7 @@ def decrypt_file_from_wav():
 def main_loop(current_keystore):
 	loop_done = False
 	while loop_done == False:
-		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV.")
+		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV, 99: Exit.")
 		option = input_int_until_list_or_default([1,2,3,4,99],100)
 		if option == 1:
 			encrypt_file_with_full_prompt()
@@ -59,8 +59,9 @@ def main_loop(current_keystore):
 			rsa_loop = True
 			while rsa_loop == True:
 				try:	
-					print("1: Generate Key, 2: Export Key, 3: Import Key, 4: View Keys, 5: Delete Key, 99: Exit ")
-					rsaop = input_int_until_list_or_default([1,2,3,4,5,99],100)
+					print("1: Generate Key, 2: Export Key, 3: Import Key, 4: View Keys.")
+					print("5: Delete Key, 6: Create Public, 99: Exit.")
+					rsaop = input_int_until_list_or_default([1,2,3,4,5,6,99],100)
 				except ValueError:
 					rsaop = 100
 				if rsaop == 1:
@@ -73,6 +74,8 @@ def main_loop(current_keystore):
 					current_keystore.view_keys()
 				elif rsaop == 5:
 					current_keystore.delete_key()
+				elif rsaop == 6:
+					current_keystore.create_public_from_private()
 				elif rsaop == 99:
 					rsa_loop = False
 				else:
@@ -80,7 +83,7 @@ def main_loop(current_keystore):
 		elif option == 4:
 			wav_loop = True
 			while wav_loop == True:
-				print("1: Encrypt into WAV, 2: Decrypt from WAV.")
+				print("1: Encrypt into WAV, 2: Decrypt from WAV, 99: Exit.")
 				rsaop = input_int_until_list_or_default([1,2,99],100)
 				if rsaop == 1:
 					encrypt_file_into_wav()
