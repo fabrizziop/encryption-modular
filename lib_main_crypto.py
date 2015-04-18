@@ -31,7 +31,7 @@ def decrypt_length(ltd, cipher_object):
 def encrypt_bytearray_with_aes256_ede3_ctr(bytearray_to_encrypt, cipher_object):
 	tte = ceil(len(bytearray_to_encrypt)/ 64)
 	out_array = bytearray()
-	pc = tte // 80
+	pc = max(tte // 80,1)
 	cnt = 0
 	print("Keystream Progress:")
 	for i in range(0,tte):
