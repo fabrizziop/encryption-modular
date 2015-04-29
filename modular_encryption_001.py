@@ -70,6 +70,7 @@ def decrypt_file_from_wav():
 
 print("Modular Encryption")
 print("by fabrizziop@github.com")
+print("GNU GPLv2 License")
 print()
 def main_loop(current_keystore):
 	loop_done = False
