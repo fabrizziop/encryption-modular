@@ -68,11 +68,14 @@ def decrypt_file_from_wav():
 	else:
 		print("Decryption Failed or Aborted.")
 
+print("Modular Encryption")
+print("by fabrizziop@github.com")
+print()
 def main_loop(current_keystore):
 	loop_done = False
 	while loop_done == False:
-		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV, 99: Exit.")
-		option = input_int_until_list_or_default([1,2,3,4,99],100)
+		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV, 5: Help, 99: Exit.")
+		option = input_int_until_list_or_default([1,2,3,4,5,99],100)
 		if option == 1:
 			encrypt_file_with_full_prompt()
 		elif option == 2:
@@ -115,6 +118,19 @@ def main_loop(current_keystore):
 					wav_loop = False
 				else:
 					print('Invalid option')
+		elif option == 5:
+			print("The cipher used is 3AES-256-EDE, in CTR mode, the keys")
+			print("are 1024 bits long. From that key, three independent")
+			print("keys are created for each AES-256 cipher object, and ")
+			print("a 128-bit IV is created and used as a starting point")
+			print("for the counter. No nonce is used as we don't reuse")
+			print("keys, ever. The counter will wrap around at the end.")
+			print("The header in PSK mode consists of two 512-bit salts")
+			print("and two 512-bit encrypted keys. Each key is encrypted")
+			print("by XORing the result of 4M PBKDF2-SHA512 iterations")
+			print("of the password + salt. All files are HMAC'd, and that")
+			print("is verified as soon as the program obtains the key.")
+			print()
 		elif option == 99:
 			loop_done = True
 		else:
