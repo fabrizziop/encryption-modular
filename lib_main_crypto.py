@@ -78,6 +78,19 @@ def decrypt_bytearray_main(file_array,main_key):
 		else:
 			pass
 	return out_array, hmac_state, encryption_done
+
+def extract_and_validate(file_array,main_key):
+	out_array = bytearray()
+	current_cipher = aes256_ede3_ctr(main_key)
+	ltd = decrypt_length(file_array[3072:3136],current_cipher)
+	# print('length decrypted: ',ltd)
+	# print('main key: ',list(main_key))
+	file_array = file_array[:3200+ltd]
+	hmac_state = verify_hmac(file_array,main_key)
+	if hmac_state == True:
+		return True, ltd
+	else:
+		return False, None
 	
 def encrypt_file_from_bytearray(bytearray_to_encrypt):
 	file_name = input("File name to save into:")
@@ -88,6 +101,7 @@ def encrypt_file_from_bytearray(bytearray_to_encrypt):
 		file_to_save, encryption_done = encrypt_file(bytearray_to_encrypt, False, allow_rsa=False)
 		file_to_save.extend(create_random_key(rng.randint(128,16384)))
 		write_file_from_bytearray(file_name,file_to_save)
+
 def decrypt_file_to_bytearray():
 	read_file, file_name = user_file_prompt("File to decrypt: ")
 	if (file_name == False) and (read_file == False):
@@ -123,4 +137,39 @@ def decrypt_file(file_to_decrypt, current_keystore, allow_rsa=True):
 		else:
 			file_to_save, hmac_state, decryption_done = decrypt_bytearray_main(file_to_decrypt,key)
 			return file_to_save, hmac_state, decryption_done
-	
+
+def extract_key_and_validate(file_to_decrypt, current_keystore):
+	is_psk, password = user_decryption_prompt(file_to_decrypt[0])
+	header = file_to_decrypt[:3072]
+	if is_psk == True:
+		key = decrypt_psk_header(header,password)
+		hmac_state, file_length = extract_and_validate(file_to_decrypt,key)
+		return hmac_state, file_length, key
+	else:
+		key, key_state = current_keystore.decrypt_rsa_header(header)
+		if key_state == False:
+			return False, False, False
+		else:
+			hmac_state, file_length = extract_and_validate(file_to_decrypt,key)
+			return hmac_state, file_length, key
+
+def change_already_validated_header(file_to_decrypt, key, file_length, current_keystore, allow_rsa=True):
+	new_file = bytearray()
+	is_psk, password = user_encryption_type_prompt(allow_rsa)
+	if is_psk == True:
+		header, key = create_psk_header(password, prov_key=key)
+		new_file.extend(header)
+		new_file.extend(file_to_decrypt[3072:3136+file_length])
+		new_file.extend(calculate_hmac(new_file,key))
+		new_file.extend(file_to_decrypt[3200+file_length:])
+		return new_file, True
+	else:
+		header, key, key_state = current_keystore.create_rsa_header(prov_key=key)
+		if key_state == False:
+			return False, False
+		else:
+			new_file.extend(header)
+			new_file.extend(file_to_decrypt[3072:3136+file_length])
+			new_file.extend(calculate_hmac(new_file,key))
+			new_file.extend(file_to_decrypt[3200+file_length:])
+			return new_file, True

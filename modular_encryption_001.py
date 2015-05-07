@@ -67,16 +67,44 @@ def decrypt_file_from_wav():
 		write_file_from_bytearray(file_out_name,file_to_save)
 	else:
 		print("Decryption Failed or Aborted.")
+def print_information():
+	read_file, file_name = user_file_prompt("File to decrypt: ")
+	if file_name == False:
+		print("File Not Found")
+		return False
+	hmac_state, file_length, key_useless = extract_key_and_validate(read_file, main_keystore)
+	if hmac_state == True:
+		print("HMAC Correct.")
+		print("The file length is:",file_length,"bytes.")
+	else:
+		print("HMAC Failed.")
+def change_password_main():
+	read_file, file_name = user_file_prompt("File to decrypt: ")
+	if file_name == False:
+		print("File Not Found")
+		return False
+	hmac_state, file_length, key = extract_key_and_validate(read_file, main_keystore)
+	if hmac_state == True:
+		print("HMAC Correct. Password change possible.")
+		new_file, change_done = change_already_validated_header(read_file, key, file_length, main_keystore)
+		if change_done == True:
+			write_file_from_bytearray(file_name,new_file)
+			print("Password Change Applied")
+		else:
+			print("Password Change Failed.")
+	else:
+		print("HMAC Failed. Password change aborted.")
 
-print("Modular Encryption")
+print("Modular Encryption 1.0.0")
 print("by fabrizziop@github.com")
 print("GNU GPLv2 License")
 print()
 def main_loop(current_keystore):
 	loop_done = False
 	while loop_done == False:
-		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV, 5: Help, 99: Exit.")
-		option = input_int_until_list_or_default([1,2,3,4,5,99],100)
+		print("1: Encrypt, 2: Decrypt, 3: Keystore, 4: WAV, 5: File Info")
+		print("6: Change Password/RSA, 90: Help, 99: Exit.")
+		option = input_int_until_list_or_default([1,2,3,4,5,6,90,99],100)
 		if option == 1:
 			encrypt_file_with_full_prompt()
 		elif option == 2:
@@ -120,6 +148,10 @@ def main_loop(current_keystore):
 				else:
 					print('Invalid option')
 		elif option == 5:
+			print_information()
+		elif option == 6:
+			change_password_main()
+		elif option == 90:
 			print("The cipher used is 3AES-256-EDE, in CTR mode, the keys")
 			print("are 1024 bits long. From that key, three independent")
 			print("keys are created for each AES-256 cipher object, and ")
@@ -131,7 +163,8 @@ def main_loop(current_keystore):
 			print("by XORing the result of 4M PBKDF2-SHA512 iterations")
 			print("of the password + salt. All files are HMAC'd, and that")
 			print("is verified as soon as the program obtains the key.")
-			print()
+			print("Allowing password changes on WAV-hidden files isn't")
+			print("smart. It will not __ever__ be implemented.")
 		elif option == 99:
 			loop_done = True
 		else:

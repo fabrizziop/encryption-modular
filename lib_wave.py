@@ -32,7 +32,7 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 	cf = 0
 	out_bytearray = bytearray()
 	len_in = len(input_bytearray)
-	pc = len_in // 80
+	pc = max(len_in // 80,1)
 	cnt = 0
 	print("WAV Merging Progress:")
 	for i in range(0,len_in):
@@ -57,7 +57,7 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 			sys.stdout.flush()
 			cnt = 0
 	cpos = (len_in*8)
-	pc = (len(wav_bytearray)-cpos) // 80
+	pc = max((len(wav_bytearray)-cpos) // 80,1)
 	cnt = 0
 	print("Padding Randomization Progress:")
 	while cpos < len(wav_bytearray):
@@ -75,7 +75,7 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 def get_bytearray_from_wav(wav_bytearray):
 	out_bytearray = bytearray()
 	ltu = len(wav_bytearray) // 8
-	pc = ltu // 80
+	pc = max(ltu // 80,1)
 	cnt = 0
 	print("WAV Decoding Progress:")
 	for i in range(0,ltu):

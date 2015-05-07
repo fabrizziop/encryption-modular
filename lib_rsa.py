@@ -12,8 +12,8 @@ class rsa_keystore(object):
 		self.key_fingerprint_list = []
 		#self.key_type_list = []
 	def generate_key(self):
-		print("Generating 9984 bit RSA key")
-		key = RSA.generate(9984)
+		print("Generating 8192 bit RSA key")
+		key = RSA.generate(8192)
 		self.key_list.append(key)
 		self.update_fingerprints()
 	def update_fingerprints(self):
@@ -99,19 +99,24 @@ class rsa_keystore(object):
 			self.update_fingerprints()
 		except IndexError:
 			print("Key not in keystore.")
-	def create_rsa_header(self):
+	def create_rsa_header(self, prov_key=None):
 		ktu = force_integer_input("Key to use:")-1
 		try:
 			ktu_ac = self.key_list[ktu]
-			key_to_encrypt = create_random_key(1024)
+			# Was 1024 bit previously, don't know why.
+			# Reduced to 128 byte to match the PSK key.
+			if prov_key == None:
+				key_to_encrypt = create_random_key(128)
+			else:
+				key_to_encrypt = prov_key
 			rsa_cipher = PKCS1_OAEP.new(ktu_ac,hashAlgo=SHA512)
 			ciphered_key = rsa_cipher.encrypt(key_to_encrypt)
 			decrypted_key = rsa_cipher.decrypt(ciphered_key)
-			print(len(ciphered_key))
+			#print(len(ciphered_key))
 			header = bytearray()
 			header.append(create_random_upper_half())
 			header.extend(ciphered_key)
-			header.extend(create_random_key(1823))
+			header.extend(create_random_key(2047))
 			return header, key_to_encrypt, True
 		except IndexError:
 			print("Key not in keystore")
@@ -124,7 +129,7 @@ class rsa_keystore(object):
 			if is_key_private == True:
 				rsacipher = PKCS1_OAEP.new(ktu_ac,hashAlgo=SHA512)
 				try:
-					deciphered_header = rsacipher.decrypt(bytes(header[1:1249]))
+					deciphered_header = rsacipher.decrypt(bytes(header[1:1025]))
 					# print(deciphered_header)
 					return deciphered_header, True
 				except ValueError:

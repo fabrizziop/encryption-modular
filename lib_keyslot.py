@@ -8,9 +8,12 @@ import hashlib
 # That way, we could change the password without re-encrypting
 # the whole file, only changing the header (and MAC)
 
-def create_psk_header(passphrase):
+def create_psk_header(passphrase, prov_key=None):
 	encoded_passphrase = passphrase.encode()
-	k1, k2 = create_random_key(64), create_random_key(64)
+	if prov_key == None:
+		k1, k2 = create_random_key(64), create_random_key(64)
+	else:
+		k1, k2 = prov_key[:64], prov_key[64:]
 	nkslot = bytearray()
 	nkslot.append(create_random_lower_half())
 	s1, s2 = create_random_key(64), create_random_key(64)
