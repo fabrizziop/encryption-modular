@@ -39,7 +39,12 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 		current_byte = input_bytearray[i]
 		current_chunks = byte_to_2_bit_chunks(current_byte)
 		#print(current_chunks)
+		# Here we are splitting a byte into four 2-bit chunks. As WAVs are little-endian,
+		# and 16 bit per channel per sample, we must interleave the storage. The program
+		# will store one byte in two 16-bit stereo frames (one byte per eight bytes).
+		# This collects each byte in the original wav.
 		b1, b2, b3, b4, b5, b6, b7, b8 = wav_bytearray[i*8], wav_bytearray[(i*8)+1], wav_bytearray[(i*8)+2], wav_bytearray[(i*8)+3], wav_bytearray[(i*8)+4], wav_bytearray[(i*8)+5], wav_bytearray[(i*8)+6], wav_bytearray[(i*8)+7]
+		# This removes the last two bits and stores the needed info there.
 		b1 &= 0b11111100
 		b1 |= current_chunks[0]
 		b3 &= 0b11111100
@@ -50,6 +55,7 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 		b7 |= current_chunks[3]
 		#print(b1&0b11,b3&0b11,b5&0b11,b7&0b11)
 		#print(b1, b2, b3, b4, b5, b6, b7, b8)
+		# This reassembles the WAV.
 		out_bytearray.extend(bytes([b1,b2,b3,b4,b5,b6,b7,b8]))
 		cnt += 1
 		if (cnt // pc) == 1:
@@ -59,6 +65,9 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 	cpos = (len_in*8)
 	pc = max((len(wav_bytearray)-cpos) // 80,1)
 	cnt = 0
+	# Most times, the file won't fit exactly into the WAV. So we must fill out that
+	# space, to avoid creating a noticeable difference that possibly leaks the file
+	# length, or makes the steganography more obvious.
 	print("Padding Randomization Progress:")
 	while cpos < len(wav_bytearray):
 		cnt += 1
@@ -82,6 +91,7 @@ def get_bytearray_from_wav(wav_bytearray):
 		#print(i)
 		#print(len(wav_bytearray))
 		b1, b2, b3, b4, b5, b6, b7, b8 = wav_bytearray[i*8], wav_bytearray[(i*8)+1], wav_bytearray[(i*8)+2], wav_bytearray[(i*8)+3], wav_bytearray[(i*8)+4], wav_bytearray[(i*8)+5], wav_bytearray[(i*8)+6], wav_bytearray[(i*8)+7]
+		# This recovers everything from the WAV, including the padding garbage at the end.
 		current_chunks = [b1&0b11,b3&0b11,b5&0b11,b7&0b11]
 		current_byte = bit_2_chunks_to_byte(current_chunks)
 		out_bytearray.append(current_byte)

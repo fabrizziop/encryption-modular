@@ -8,6 +8,7 @@ from lib_keyslot import *
 from lib_user_input import *
 from lib_file_ops import *
 from lib_random import *
+from lib_misc import get_user_attention
 
 print_same_line = sys.stdout.write
 
@@ -70,6 +71,7 @@ def decrypt_bytearray_main(file_array,main_key):
 		encryption_done = True
 	else:
 		#print("HMAC Fucked up.")
+		get_user_attention(True)
 		print("HMAC Mismatch, want to continue?. 0: No, 1: Yes [0]")
 		hmac_ignore = input_int_until_list_or_default([0,1],0)
 		if hmac_ignore == 1:

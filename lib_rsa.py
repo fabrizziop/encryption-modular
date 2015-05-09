@@ -4,6 +4,7 @@ from Crypto.Hash import SHA512
 import hashlib
 from lib_user_input import force_integer_input
 from lib_random import create_random_key
+from lib_misc import get_user_attention
 from lib_main_crypto import *
 class rsa_keystore(object):
 	# e = 65537 fixed
@@ -43,27 +44,9 @@ class rsa_keystore(object):
 				encrypt_file_from_bytearray(bytearray(kte_ac.exportKey(format='DER')))
 		except IndexError:
 			print("Key not in keystore.")
-	# def export_key(self):
-		# kte = force_integer_input("Key to export:")-1
-		# try:
-			# kte_ac = self.key_list[kte]
-			# kte_n = kte_ac.n
-			# kte_str = str(kte_n)
-			# kte_hasprivate = kte_ac.has_private()
-			# if kte_hasprivate == True:
-				# export_priv = False
-				# epprompt = str(input("Export also your private key? [N]"))
-				# if epprompt == "Y" or epprompt == "y":
-					# export_priv = True
-				# if export_priv == True:
-					# kte_d = kte_ac.d
-					# kte_str = kte_str + "," + str(kte_d)
-			# encrypt_file_from_bytearray(bytearray(kte_str.encode()))
-		# except IndexError:
-			# print("Key not in keystore.")
 	def import_key(self):
 		keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray()
-		if hmac_state == False or decryption_done == False:
+		if decryption_done == False:
 			print("Decryption Failed")
 			return False
 		else:
@@ -72,21 +55,10 @@ class rsa_keystore(object):
 				self.update_fingerprints()
 				return True
 			except ValueError:
+				print()
+				get_user_attention(True)
 				print("Malformed RSA key.")
 				return False
-	# def import_key(self):
-		# keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray()
-		# if hmac_state == False or decryption_done == False:
-			# print("Decryption Failed")
-			# return "F"
-		# else:
-			# keydec = (keyraw.decode()).split(",")
-		# if len(keydec) == 1:
-			# tuple_to_use = int(keydec[0]),65537
-		# elif len(keydec) == 2:
-			# tuple_to_use = int(keydec[0]),65537,int(keydec[1])
-		# self.key_list.append(RSA.construct(tuple_to_use))
-		# self.update_fingerprints()
 	def delete_key(self):
 		kte = force_integer_input("Key to delete:")-1
 		self.key_list.pop(kte)
@@ -133,6 +105,8 @@ class rsa_keystore(object):
 					# print(deciphered_header)
 					return deciphered_header, True
 				except ValueError:
+					print()
+					get_user_attention(True)
 					print("Decryption Incorrect. Wrong key or tampered file.")
 					return False, False
 			else:

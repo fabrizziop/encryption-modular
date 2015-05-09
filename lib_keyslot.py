@@ -1,5 +1,6 @@
 from lib_random import *
 from lib_elementary_operations import do_xor_on_bytes
+from lib_misc import get_user_attention
 import hashlib
 
 # All headers, RSA or PSK are 3072-byte long. For PSK headers,
@@ -13,6 +14,11 @@ def create_psk_header(passphrase, prov_key=None):
 	if prov_key == None:
 		k1, k2 = create_random_key(64), create_random_key(64)
 	else:
+		if len(prov_key) != 128:
+			get_user_attention(True)
+			print("HEADER KEY OVER 128 BYTE LONG!")
+			print("UNEXPECTED RESULTS")
+			get_user_attention(False)
 		k1, k2 = prov_key[:64], prov_key[64:]
 	nkslot = bytearray()
 	nkslot.append(create_random_lower_half())
