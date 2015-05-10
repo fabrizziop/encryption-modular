@@ -55,7 +55,7 @@ def user_file_prompt_noread(prompt_string):
 def user_encryption_type_prompt(allow_rsa):
 	encryption_type = 1
 	if allow_rsa == True:
-		print("1: PSK, 2: RSA.")
+		print("1: PSK, 2: RSA. [1]")
 		encryption_type = input_int_until_list_or_default([1,2],1)
 	if encryption_type == 1:
 		password = input_password_until_match()
