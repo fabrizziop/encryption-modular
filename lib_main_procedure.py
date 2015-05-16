@@ -4,6 +4,7 @@ from lib_rsa import *
 from lib_file_ops import *
 from lib_wave import *
 from lib_random import *
+from lib_misc import *
 
 def encrypt_file_with_full_prompt(main_keystore):
 	read_file, file_name = user_file_prompt("File to encrypt: ")
@@ -97,3 +98,40 @@ def change_password_main(main_keystore):
 			print("Password Change Failed.")
 	else:
 		print("HMAC Failed. Password change aborted.")
+def sign_file(main_keystore):
+	read_file, file_name = user_file_prompt("File to decrypt: ")
+	if file_name == False:
+		print("File Not Found")
+		return False
+	signature = main_keystore.sign_rsa(read_file)
+	if signature == None:
+		print("Signature Failed")
+		return None
+	elif type(signature) == bytearray:
+		read_file.extend(signature)
+		write_file_from_bytearray(file_name, read_file)
+
+def verify_file(main_keystore):
+	read_file, file_name = user_file_prompt("File to decrypt: ")
+	if file_name == False:
+		print("File Not Found")
+		return False
+	verify_status, key_used = main_keystore.verify_rsa(read_file)
+	if verify_status == True:
+		print()
+		print("Signature OK from key with fingerprint:")
+		print(key_used)
+		print()
+		return None
+	elif verify_status == False:
+		get_user_attention()
+		print("Signature INCORRECT from key with fingerprint:")
+		print(key_used)
+		get_user_attention(False)
+		return None
+	elif verify_status == None:
+		get_user_attention()
+		print("Signature verification FAILED")
+		get_user_attention(False)
+		return None
+	return None

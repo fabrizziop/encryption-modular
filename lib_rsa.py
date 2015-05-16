@@ -1,7 +1,9 @@
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA512
+from Crypto.Signature import PKCS1_v1_5
 import hashlib
+import binascii
 from lib_user_input import force_integer_input
 from lib_random import create_random_key
 from lib_misc import get_user_attention
@@ -20,14 +22,14 @@ class rsa_keystore(object):
 	def update_fingerprints(self):
 		self.key_fingerprint_list = []
 		for i in range(0,len(self.key_list)):
-			self.key_fingerprint_list.append(hashlib.sha256(bytes(str(self.key_list[i].n).encode())).hexdigest())
+			self.key_fingerprint_list.append(hashlib.sha256(bytes(str(self.key_list[i].n).encode())).digest())
 	def view_keys(self):
 		if len(self.key_fingerprint_list) == 0:
 			print("No keys found")
 		else:
 			for i in range(0,len(self.key_fingerprint_list)):
 				print("Key number :",i+1)
-				print("Fingerprint:",self.key_fingerprint_list[i])
+				print("Fingerprint:",bytes.decode(binascii.hexlify(self.key_fingerprint_list[i])))
 				# print("Size",self.key_list[i].size())
 				print("Private key:", self.key_list[i].has_private())
 	def export_key(self):
@@ -114,3 +116,46 @@ class rsa_keystore(object):
 		except IndexError:
 			print("Key not in keystore")
 			return False, False
+	def return_first_key_position_from_sig(self, sig_in):
+		hash_to_search = sig_in[:32]
+		for i in range(0,len(self.key_fingerprint_list)):
+			if self.key_fingerprint_list[i] == hash_to_search:
+				return i
+		return None
+	def sign_rsa(self, content_to_sign):
+		ktu = force_integer_input("Key to use:")-1
+		try:
+			ktu_ac = self.key_list[ktu]
+			is_key_private = ktu_ac.has_private()
+			if is_key_private == True:
+				m_hash = SHA512.new(content_to_sign)
+				sign_object = PKCS1_v1_5.new(ktu_ac)
+				signature = sign_object.sign(m_hash)
+				signature_to_append = bytearray()
+				signature_to_append.extend(self.key_fingerprint_list[ktu])
+				signature_to_append.extend(signature)
+				signature_to_append.extend(create_random_key(2016))
+				return signature_to_append
+			else:
+				print("The key selected doesn't have its private decryption exponent.")
+				return None
+		except IndexError:
+			print("Key not in keystore")
+			return None
+	def verify_rsa(self, content_to_verify):
+		signature_block = content_to_verify[-3072:]
+		actual_signature = signature_block[:1056]
+		ktu = self.return_first_key_position_from_sig(actual_signature)
+		if type(ktu) == int:
+			ktu_ac = self.key_list[ktu]
+			m_hash = SHA512.new(content_to_verify[:-3072])
+			verify_object = PKCS1_v1_5.new(ktu_ac)
+			verify_status = verify_object.verify(m_hash, bytes(actual_signature[32:]))
+			return verify_status, bytes.decode(binascii.hexlify(actual_signature[:32]))
+		else:
+			print("Key not in keystore")
+			print("Desired fingerprint is:")
+			print()
+			print(bytes.decode(binascii.hexlify(actual_signature[:32])))
+			print()
+			return None, None

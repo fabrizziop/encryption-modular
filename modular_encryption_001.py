@@ -3,7 +3,7 @@ from lib_main_procedure import *
 actual_keystore = rsa_keystore()
 
 
-print("Modular Encryption 1.0.1")
+print("Modular Encryption 1.1.0")
 print("by fabrizziop@github.com")
 print("GNU GPLv2 License")
 print()
@@ -22,8 +22,8 @@ def main_loop(current_keystore):
 			while rsa_loop == True:
 				try:	
 					print("1: Generate Key, 2: Export Key, 3: Import Key, 4: View Keys.")
-					print("5: Delete Key, 6: Create Public, 99: Exit.")
-					rsaop = input_int_until_list_or_default([1,2,3,4,5,6,99],100)
+					print("5: Delete Key, 6: Create Public, 7: Sign, 8: Verify, 99: Exit.")
+					rsaop = input_int_until_list_or_default([1,2,3,4,5,6,7,8,99],100)
 				except ValueError:
 					rsaop = 100
 				if rsaop == 1:
@@ -38,6 +38,10 @@ def main_loop(current_keystore):
 					current_keystore.delete_key()
 				elif rsaop == 6:
 					current_keystore.create_public_from_private()
+				elif rsaop == 7:
+					sign_file(current_keystore)
+				elif rsaop == 8:
+					verify_file(current_keystore)
 				elif rsaop == 99:
 					rsa_loop = False
 				else:
