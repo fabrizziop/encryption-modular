@@ -5,6 +5,7 @@ from lib_file_ops import *
 from lib_wave import *
 from lib_random import *
 from lib_misc import *
+from lib_gui import *
 
 def encrypt_file_with_full_prompt(main_keystore):
 	read_file, file_name = user_file_prompt("File to encrypt: ")
@@ -36,7 +37,8 @@ def encrypt_file_into_wav(main_keystore):
 		print("File Not Found")
 		return False
 	min_len = len(read_file)
-	wav_in_file = input("WAV file to read: ")
+	print("WAV file to read: ")
+	wav_in_file = gui_get_filename_to_open()
 	if is_file_accessible(wav_in_file) == False:
 		print("File Not Found")
 		return False
@@ -47,7 +49,8 @@ def encrypt_file_into_wav(main_keystore):
 	if (min_len+3200) > max_len:
 		print("File won't fit into WAV.")
 		return False
-	wav_out_name = input("File name to save into:")
+	print("File name to save into:")
+	wav_out_name = gui_get_filename_to_save()
 	file_to_save, encryption_done = encrypt_file(read_file, main_keystore)
 	if encryption_done == True:
 		wav_in, parameters_wav = read_wave_to_bytearray(wav_in_file)
@@ -57,11 +60,13 @@ def encrypt_file_into_wav(main_keystore):
 		print("Encryption Failed.")
 
 def decrypt_file_from_wav(main_keystore):
-	wav_in_file = input("WAV file to read: ")
+	print("WAV file to read: ")
+	wav_in_file = gui_get_filename_to_open()
 	if is_file_accessible(wav_in_file) == False:
 		print("File Not Found")
 		return False
-	file_out_name = input("File name to save into:")
+	print("File name to save into:")
+	file_out_name = gui_get_filename_to_save()
 	wav_bytes, parameters_wav = read_wave_to_bytearray(wav_in_file)
 	input_bytearray = get_bytearray_from_wav(wav_bytes)
 	file_to_save, hmac_state, decryption_done = decrypt_file(input_bytearray, main_keystore)

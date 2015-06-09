@@ -3,7 +3,7 @@ from lib_main_procedure import *
 actual_keystore = rsa_keystore()
 
 
-print("Modular Encryption 1.1.0")
+print("Modular Encryption 1.2.0")
 print("by fabrizziop@github.com")
 print("GNU GPLv2 License")
 print()

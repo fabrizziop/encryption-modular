@@ -1,6 +1,7 @@
 import getpass
 from lib_file_ops import *
 from lib_keyslot import is_header_psk
+from lib_gui import *
 def input_int_until_list_or_default(list_desired, default_val):
 	is_done = False
 	while is_done == False:
@@ -37,7 +38,8 @@ def force_integer_input(des_str):
 	return ipt
 
 def user_file_prompt(prompt_string):
-	file_name = input(prompt_string)
+	print(prompt_string)
+	file_name = gui_get_filename_to_open()
 	file_condition = is_file_accessible(file_name)
 	if file_condition == True:
 		return read_file_to_bytearray(file_name), file_name
@@ -45,7 +47,8 @@ def user_file_prompt(prompt_string):
 		return False, False
 		
 def user_file_prompt_noread(prompt_string):
-	file_name = input(prompt_string)
+	print(prompt_string)
+	file_name = gui_get_filename_to_open()
 	file_condition = is_file_accessible(file_name)
 	if file_condition == True:
 		return True, file_name
