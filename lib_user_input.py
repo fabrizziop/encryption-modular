@@ -56,18 +56,18 @@ def user_file_prompt_noread(prompt_string):
 		return False, False
 
 def user_encryption_type_prompt(allow_rsa):
-	encryption_type = 1
+	encryption_type = True
 	if allow_rsa == True:
-		print("1: PSK, 2: RSA. [1]")
-		encryption_type = input_int_until_list_or_default([1,2],1)
-	if encryption_type == 1:
-		password = input_password_until_match()
+		encryption_type = ask_psk_or_rsa()
+		# print(encryption_type)
+	if encryption_type == True:
+		password = dual_password_prompt("Enter Encryption Password")
 		return True, password
 	else:
 		return False, False
 def user_decryption_prompt(b0f):
 	if is_header_psk(b0f) == True:
-		password = input_password_until_match()
+		password = simple_password_prompt("Enter Decryption Password")
 		return True, password
 	else:
 		return False, False

@@ -2,6 +2,7 @@ import wave
 import sys
 from lib_random import *
 from lib_bitwise import *
+from lib_gui import *
 print_same_line = sys.stdout.write
 def read_wave_parameters(file_name):
 	test_file = wave.open(file_name,'rb')
@@ -32,9 +33,9 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 	cf = 0
 	out_bytearray = bytearray()
 	len_in = len(input_bytearray)
-	pc = max(len_in // 80,1)
+	pc = max(len_in // 224,1)
 	cnt = 0
-	print("WAV Merging Progress:")
+	progress = simple_progress_popup_determinate(224,"WAV Merging","WAV Merging Progress")
 	for i in range(0,len_in):
 		current_byte = input_bytearray[i]
 		current_chunks = byte_to_2_bit_chunks(current_byte)
@@ -59,16 +60,16 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 		out_bytearray.extend(bytes([b1,b2,b3,b4,b5,b6,b7,b8]))
 		cnt += 1
 		if (cnt // pc) == 1:
-			print_same_line("=")
-			sys.stdout.flush()
+			progress.step_progress()
 			cnt = 0
+	progress.destroy_progress()
 	cpos = (len_in*8)
-	pc = max((len(wav_bytearray)-cpos) // 80,1)
+	pc = max((len(wav_bytearray)-cpos) // 224,1)
 	cnt = 0
 	# Most times, the file won't fit exactly into the WAV. So we must fill out that
 	# space, to avoid creating a noticeable difference that possibly leaks the file
 	# length, or makes the steganography more obvious.
-	print("Padding Randomization Progress:")
+	progress = simple_progress_popup_determinate(224,"WAV Padding Randomization","WAV Padding Randomization Progress")
 	while cpos < len(wav_bytearray):
 		cnt += 1
 		if cpos % 2 == 0:
@@ -76,17 +77,17 @@ def merge_bytearray_and_wav(input_bytearray, wav_bytearray):
 		else:
 			out_bytearray.append(wav_bytearray[cpos])
 		if (cnt // pc) == 1:
-			print_same_line("=")
-			sys.stdout.flush()
+			progress.step_progress()
 			cnt = 0
 		cpos +=1
+	progress.destroy_progress()
 	return out_bytearray
 def get_bytearray_from_wav(wav_bytearray):
 	out_bytearray = bytearray()
 	ltu = len(wav_bytearray) // 8
-	pc = max(ltu // 80,1)
+	pc = max(ltu // 224,1)
 	cnt = 0
-	print("WAV Decoding Progress:")
+	progress = simple_progress_popup_determinate(224,"WAV Decoding","WAV Decoding Progress")
 	for i in range(0,ltu):
 		#print(i)
 		#print(len(wav_bytearray))
@@ -97,7 +98,7 @@ def get_bytearray_from_wav(wav_bytearray):
 		out_bytearray.append(current_byte)
 		cnt += 1
 		if (cnt // pc) == 1:
-			print_same_line("=")
-			sys.stdout.flush()
+			progress.step_progress()
 			cnt = 0
+	progress.destroy_progress()
 	return out_bytearray

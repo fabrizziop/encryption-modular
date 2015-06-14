@@ -4,10 +4,12 @@ from Crypto.Hash import SHA512
 from Crypto.Signature import PKCS1_v1_5
 import hashlib
 import binascii
+import time
 from lib_user_input import force_integer_input
 from lib_random import create_random_key
 from lib_misc import get_user_attention
 from lib_main_crypto import *
+from lib_gui import *
 class rsa_keystore(object):
 	# e = 65537 fixed
 	def __init__(self):
@@ -15,8 +17,9 @@ class rsa_keystore(object):
 		self.key_fingerprint_list = []
 		#self.key_type_list = []
 	def generate_key(self):
-		print("Generating 8192 bit RSA key")
+		progress_object = simple_progress_popup_indeterminate("RSA Key Generation", "Generating 8192 bit RSA key")
 		key = RSA.generate(8192)
+		progress_object.destroy_progress()
 		self.key_list.append(key)
 		self.update_fingerprints()
 	def update_fingerprints(self):
@@ -32,22 +35,22 @@ class rsa_keystore(object):
 				print("Fingerprint:",bytes.decode(binascii.hexlify(self.key_fingerprint_list[i])))
 				# print("Size",self.key_list[i].size())
 				print("Private key:", self.key_list[i].has_private())
-	def export_key(self):
-		kte = force_integer_input("Key to export:")-1
-		try:
-			kte_ac = self.key_list[kte]
-			kte_hasprivate = kte_ac.has_private()
-			priv_override = False
-			if kte_hasprivate == True:
-				epprompt = str(input("Are you sure? The private key WILL be included. [N]"))
-				if epprompt == "Y" or epprompt == "y":
-					priv_override = True
-			if (kte_hasprivate == False) or (kte_hasprivate == True and priv_override == True):
-				encrypt_file_from_bytearray(bytearray(kte_ac.exportKey(format='DER')))
-		except IndexError:
-			print("Key not in keystore.")
-	def import_key(self):
-		keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray()
+	def export_key(self,kte):
+		kte_ac = self.key_list[kte]
+		kte_hasprivate = kte_ac.has_private()
+		priv_override = False
+		if kte_hasprivate == True:
+			epprompt = askyesno('RSA Private Export Warning','The RSA private exponent will be exported, please confirm')
+			if epprompt == True:
+				priv_override = True
+		if (kte_hasprivate == False) or (kte_hasprivate == True and priv_override == True):
+			enc_status = encrypt_file_from_bytearray(bytearray(kte_ac.exportKey(format='DER')))
+			if enc_status:
+				showinfo(title="Key Export Successful",message="Key Export Successful")
+			else:
+				showerror(title="Key Export Failed.",message="Key Export Failed.")
+	def import_key(self, read_file):
+		keyraw, hmac_state, decryption_done = decrypt_file_to_bytearray(read_file)
 		if decryption_done == False:
 			print("Decryption Failed")
 			return False
@@ -61,20 +64,18 @@ class rsa_keystore(object):
 				get_user_attention(True)
 				print("Malformed RSA key.")
 				return False
-	def delete_key(self):
-		kte = force_integer_input("Key to delete:")-1
+	def delete_key(self,kte):
 		self.key_list.pop(kte)
 		self.update_fingerprints()
-	def create_public_from_private(self):
-		kte = force_integer_input("Key to create a public clone from:")-1
-		try:
-			kte_ac = self.key_list[kte]
-			self.key_list.append(kte_ac.publickey())
-			self.update_fingerprints()
-		except IndexError:
-			print("Key not in keystore.")
+	def create_public_from_private(self,kte):
+		kte_ac = self.key_list[kte]
+		self.key_list.append(kte_ac.publickey())
+		self.update_fingerprints()
 	def create_rsa_header(self, prov_key=None):
-		ktu = force_integer_input("Key to use:")-1
+		ktu = ask_for_rsa_key(self, False)
+		if ktu == None:
+			showwarning(title="No Key Available",message="No suitable key for encryption is in Keystore.")
+			return False,False,False
 		try:
 			ktu_ac = self.key_list[ktu]
 			# Was 1024 bit previously, don't know why.
@@ -85,7 +86,7 @@ class rsa_keystore(object):
 				key_to_encrypt = prov_key
 			rsa_cipher = PKCS1_OAEP.new(ktu_ac,hashAlgo=SHA512)
 			ciphered_key = rsa_cipher.encrypt(key_to_encrypt)
-			decrypted_key = rsa_cipher.decrypt(ciphered_key)
+			# decrypted_key = rsa_cipher.decrypt(ciphered_key)
 			#print(len(ciphered_key))
 			header = bytearray()
 			header.append(create_random_upper_half())
@@ -93,10 +94,13 @@ class rsa_keystore(object):
 			header.extend(create_random_key(2047))
 			return header, key_to_encrypt, True
 		except IndexError:
-			print("Key not in keystore")
+			showerror(title="Please report this error",message="Keystore selected key out of index.")
 			return False, False, False
 	def decrypt_rsa_header(self, header):
-		ktu = force_integer_input("Key to use:")-1
+		ktu = ask_for_rsa_key(self, True)
+		if ktu == None:
+			showwarning(title="No Key Available",message="No suitable key for decryption is in Keystore.")
+			return False,False
 		try:
 			ktu_ac = self.key_list[ktu]
 			is_key_private = ktu_ac.has_private()
@@ -107,14 +111,12 @@ class rsa_keystore(object):
 					# print(deciphered_header)
 					return deciphered_header, True
 				except ValueError:
-					print()
-					get_user_attention(True)
-					print("Decryption Incorrect. Wrong key or tampered file.")
+					showerror(title="Decryption Incorrect",message="Decryption Incorrect. Wrong key or tampered file.")
 					return False, False
 			else:
-				print("The key selected doesn't have its private decryption exponent.")
+				showerror(title="Please report this error",message="The key selected doesn't have its private decryption exponent.")
 		except IndexError:
-			print("Key not in keystore")
+			showerror(title="Please report this error",message="Keystore selected key out of index.")
 			return False, False
 	def return_first_key_position_from_sig(self, sig_in):
 		hash_to_search = sig_in[:32]
@@ -123,7 +125,10 @@ class rsa_keystore(object):
 				return i
 		return None
 	def sign_rsa(self, content_to_sign):
-		ktu = force_integer_input("Key to use:")-1
+		ktu = ask_for_rsa_key(self, True)
+		if ktu == None:
+			showwarning(title="No Key Available",message="No suitable key for signing is in Keystore.")
+			return None
 		try:
 			ktu_ac = self.key_list[ktu]
 			is_key_private = ktu_ac.has_private()
@@ -137,10 +142,10 @@ class rsa_keystore(object):
 				signature_to_append.extend(create_random_key(2016))
 				return signature_to_append
 			else:
-				print("The key selected doesn't have its private decryption exponent.")
+				showerror(title="Please report this error",message="The key selected doesn't have its private decryption exponent.")
 				return None
 		except IndexError:
-			print("Key not in keystore")
+			showerror(title="Please report this error",message="Keystore selected key out of index.")
 			return None
 	def verify_rsa(self, content_to_verify):
 		signature_block = content_to_verify[-3072:]
@@ -153,9 +158,5 @@ class rsa_keystore(object):
 			verify_status = verify_object.verify(m_hash, bytes(actual_signature[32:]))
 			return verify_status, bytes.decode(binascii.hexlify(actual_signature[:32]))
 		else:
-			print("Key not in keystore")
-			print("Desired fingerprint is:")
-			print()
-			print(bytes.decode(binascii.hexlify(actual_signature[:32])))
-			print()
+			showinfo(title="Key not found", message="Key not in keystore, desired fingerprint is: "+str(bytes.decode(binascii.hexlify(actual_signature[:32]))))
 			return None, None

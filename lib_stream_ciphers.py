@@ -1,7 +1,7 @@
 import hashlib
 from Crypto.Cipher import AES
 from lib_bitwise import int_to_big_endian, big_endian_to_int
-from lib_misc import get_user_attention
+from tkinter.messagebox import showerror
 # An attempt to create a stream cipher resistant to AES
 # weaknesses if found. 768-bit triple AES-256-EDE, used
 # in CTR mode. Probably 512-bit equivalent. Hope to never
@@ -14,10 +14,7 @@ class aes256_ede3_ctr(object):
 		k4 = init_key[96:128]
 		# Paranoid last-resort sanity check!.
 		if (len(init_key)!=128) or (k1 == k2 == k3):
-			get_user_attention(True)
-			print("AES KEY ERROR")
-			print("CIPHER UNSAFE")
-			get_user_attention(False)
+			showerror(title="Please report this",message="AES KEY ERROR, CIPHER UNSAFE")
 		aes_first = hashlib.sha256(k1+k4).digest()
 		aes_second = hashlib.sha256(k2+k4).digest()
 		aes_third = hashlib.sha256(k3+k4).digest()

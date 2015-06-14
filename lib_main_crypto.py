@@ -9,6 +9,7 @@ from lib_user_input import *
 from lib_file_ops import *
 from lib_random import *
 from lib_misc import get_user_attention
+from lib_gui import *
 
 print_same_line = sys.stdout.write
 
@@ -32,16 +33,16 @@ def decrypt_length(ltd, cipher_object):
 def encrypt_bytearray_with_aes256_ede3_ctr(bytearray_to_encrypt, cipher_object):
 	tte = ceil(len(bytearray_to_encrypt)/ 64)
 	out_array = bytearray()
-	pc = max(tte // 80,1)
+	pc = max(tte // 224,1)
 	cnt = 0
-	print("Keystream Progress:")
+	progress = simple_progress_popup_determinate(224,"Keystream","AES256-EDE3-CTR Stream Progress")
 	for i in range(0,tte):
 		cnt += 1
 		if (cnt // pc) == 1:
-			print_same_line("=")
-			sys.stdout.flush()
+			progress.step_progress()
 			cnt = 0
 		out_array.extend(do_xor_on_bytes(bytearray_to_encrypt[(i*64):(i*64)+64],cipher_object.get_bytes_to_xor()))
+	progress.destroy_progress()
 	return out_array
 
 def encrypt_bytearray_main(header,file_array,main_key):
@@ -66,15 +67,12 @@ def decrypt_bytearray_main(file_array,main_key):
 	hmac_state = verify_hmac(file_array,main_key)
 	encryption_done = False
 	if hmac_state == True:
-		print("HMAC OK.")
+		showinfo(title="HMAC OK", message="HMAC OK, integrity and authenticity verified")
 		out_array.extend(encrypt_bytearray_with_aes256_ede3_ctr(file_array[3136:(3136+ltd)],current_cipher))
 		encryption_done = True
 	else:
-		#print("HMAC Fucked up.")
-		get_user_attention(True)
-		print("HMAC Mismatch, want to continue?. 0: No, 1: Yes [0]")
-		hmac_ignore = input_int_until_list_or_default([0,1],0)
-		if hmac_ignore == 1:
+		showwarning(title="HMAC Fail", message="HMAC Fail, integrity and authenticity NOT guaranteed")
+		if askyesno(title="HMAC Override?", message="Press Yes to OVERRIDE and continue decryption. NOT RECOMMENDED"):
 			out_array.extend(encrypt_bytearray_with_aes256_ede3_ctr(file_array[3136:(3136+ltd)],current_cipher))
 			encryption_done = True
 		else:
@@ -95,18 +93,16 @@ def extract_and_validate(file_array,main_key):
 		return False, None
 	
 def encrypt_file_from_bytearray(bytearray_to_encrypt):
-	file_name = input("File name to save into:")
-	if is_file_accessible(file_name) == True:
-		print("File Already Exists, NOT OVERWRITING.")
-		return False
-	else:
-		file_to_save, encryption_done = encrypt_file(bytearray_to_encrypt, False, allow_rsa=False)
-		file_to_save.extend(create_random_key(rng.randint(128,16384)))
-		write_file_from_bytearray(file_name,file_to_save)
+	file_name = gui_get_filename_to_save()
+	file_to_save, encryption_done = encrypt_file(bytearray_to_encrypt, False, allow_rsa=False)
+	file_to_save.extend(create_random_key(rng.randint(128,16384)))
+	write_file_from_bytearray(file_name,file_to_save)
+	#RECENT ADDITION
+	return encryption_done
 
-def decrypt_file_to_bytearray():
-	read_file, file_name = user_file_prompt("File to decrypt: ")
-	if (file_name == False) and (read_file == False):
+# MIGRATED = TRUE
+def decrypt_file_to_bytearray(read_file):
+	if read_file == False:
 		print("File Not Found")
 		return False, False, False
 	return decrypt_file(read_file, False, allow_rsa=False)

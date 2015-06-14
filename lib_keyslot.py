@@ -1,6 +1,7 @@
 from lib_random import *
 from lib_elementary_operations import do_xor_on_bytes
 from lib_misc import get_user_attention
+from lib_gui import *
 import hashlib
 
 # All headers, RSA or PSK are 3072-byte long. For PSK headers,
@@ -10,14 +11,14 @@ import hashlib
 # the whole file, only changing the header (and MAC)
 
 def create_psk_header(passphrase, prov_key=None):
+	progress_object = simple_progress_popup_indeterminate("PSK Header Generation", "Generating PSK header, 2x4M PBKDF2 iterations")
 	encoded_passphrase = passphrase.encode()
 	if prov_key == None:
 		k1, k2 = create_random_key(64), create_random_key(64)
 	else:
 		if len(prov_key) != 128:
 			get_user_attention(True)
-			print("HEADER KEY OVER 128 BYTE LONG!")
-			print("UNEXPECTED RESULTS")
+			showerror(title="Please report this",message="HEADER KEY OVER 128 BYTE LONG!")
 			get_user_attention(False)
 		k1, k2 = prov_key[:64], prov_key[64:]
 	nkslot = bytearray()
@@ -27,14 +28,17 @@ def create_psk_header(passphrase, prov_key=None):
 	ek1, ek2 = do_xor_on_bytes(xm1,k1), do_xor_on_bytes(xm2,k2)
 	rp = create_random_key(2815)
 	nkslot.extend(s1+ek1+s2+ek2+rp)
+	progress_object.destroy_progress()
 	return nkslot, k1+k2
 	
 def decrypt_psk_header(nkslot, passphrase):
+	progress_object = simple_progress_popup_indeterminate("PSK Header Decryption", "Decrypting PSK header, 2x4M PBKDF2 iterations")
 	encoded_passphrase = passphrase.encode()
 	s1, ek1, s2, ek2 = nkslot[1:65], nkslot[65:129], nkslot[129:193], nkslot[193:257]
 	# print(len(s1),len(ek1),len(s2),len(ek2))
 	xm1, xm2 = bytearray(hashlib.pbkdf2_hmac('sha512', encoded_passphrase, s1, 4000000)), bytearray(hashlib.pbkdf2_hmac('sha512', encoded_passphrase, s2, 4000000))
 	k1, k2 = do_xor_on_bytes(xm1,ek1), do_xor_on_bytes(xm2,ek2)
+	progress_object.destroy_progress()
 	return k1+k2
 
 def is_header_psk(first_byte):
