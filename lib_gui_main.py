@@ -14,7 +14,7 @@ class main_program_gui(Frame):
 		self.pack()
 	def init_ui(self):
 		# self.state_cheap_hack = state_saver_and_closer(self.parent)
-		self.parent.title("Modular Encryption r2.0.0")
+		self.parent.title("Modular Encryption r2.0.1")
 		self.parent.geometry("864x524")
 		self.frame_notebook = ttk.Notebook(self)
 		self.keystore_frame = ttk.Frame(self.frame_notebook)
