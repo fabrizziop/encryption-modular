@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import binascii
+import time
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import askyesno, showinfo, showwarning, showerror, askyesno
 class state_saver(object):
@@ -105,6 +106,7 @@ def simple_password_prompt(prompt_string):
 	entry1.bind('<Return>',lambda _:loop_state_obj.set_false())
 	while loop_state_obj.stateloop == True:
 		new_win.update()
+		time.sleep(0.02)
 	new_win.destroy()
 	return password1.get()
 def ask_psk_or_rsa():
@@ -123,6 +125,7 @@ def ask_psk_or_rsa():
 	btn2.pack(side="right",padx=15,pady=5)
 	while loop_state_obj.stateloop == True:
 		new_win.update()
+		time.sleep(0.02)
 	new_win.destroy()
 	return loop_state_obj.state
 
@@ -163,6 +166,7 @@ def ask_for_rsa_key(current_keystore, private_required):
 	new_win.update()
 	while loop_state_obj.state == True:
 		new_win.update()
+		time.sleep(0.02)
 	return current_key_selection.get()
 
 def button_compare(e1,e2,button):
@@ -201,6 +205,7 @@ def dual_password_prompt(prompt_string):
 	entry2.bind('<Return>',lambda _:compare_and_destroy_window(password1,password2,loop_state_obj))
 	while loop_state_obj.stateloop == True:
 		new_win.update()
+		time.sleep(0.02)
 	new_win.destroy()
 	return password1.get()
 
