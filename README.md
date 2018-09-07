@@ -1,6 +1,8 @@
 # encryption-modular
 File encryption, plus steganography inside WAV.
 
+# PLEASE USE new_steg_tool! https://github.com/fabrizziop/new_steg_tool
+
 Any questions or suggestions, please mail me. PGP keys:
 
 B48D57027501810FBE2538332C14F1ACFB154963 - New key.
